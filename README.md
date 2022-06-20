@@ -56,7 +56,10 @@ module.exports = {
                 engine: {
                     apiKey: process.env.APOLLO_ENGINE_KEY
                 }
-            }
+            },
+
+            // Limit the services included in the schema
+            services: []
         })
     ]
 };

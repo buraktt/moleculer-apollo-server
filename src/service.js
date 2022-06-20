@@ -630,7 +630,13 @@ module.exports = function (mixinOptions) {
 				try {
 					this.pubsub = this.createPubSub();
 					const services = this.broker.registry.getServiceList({ withActions: true });
-					const schema = this.generateGraphQLSchema(services);
+					const servicesToProcess =
+						Array.isArray(mixinOptions.services) && mixinOptions.services.length
+							? services.filter(service =>
+									mixinOptions.services.includes(this.getServiceName(service))
+							  )
+							: services;
+					const schema = this.generateGraphQLSchema(servicesToProcess);
 
 					this.logger.debug(
 						"Generated GraphQL schema:\n\n" + GraphQL.printSchema(schema)
@@ -671,7 +677,7 @@ module.exports = function (mixinOptions) {
 
 					this.graphqlSchema = schema;
 
-					this.buildLoaderOptionMap(services); // rebuild the options for DataLoaders
+					this.buildLoaderOptionMap(servicesToProcess); // rebuild the options for DataLoaders
 
 					this.shouldUpdateGraphqlSchema = false;
 
