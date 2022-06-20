@@ -1543,5 +1543,27 @@ describe("Test Service", () => {
 
 			await stop();
 		});
+
+		it("should not include all services", async () => {
+			const serviceToInclude = "test-svc-1";
+			const { broker, svc } = await startService({
+				services: [serviceToInclude],
+			});
+			broker.registry.getServiceList = jest.fn(() => services);
+			svc.generateGraphQLSchema = jest.fn(() => "graphql schema");
+			svc.prepareGraphQLSchema();
+			expect(svc.generateGraphQLSchema).toBeCalledWith(
+				services.filter(service => service.name === serviceToInclude)
+			);
+			expect(svc.dataLoaderOptions).toEqual(
+				new Map([["test-svc-1.test-action-1", { option1: "option-value-1" }]])
+			);
+			expect(svc.dataLoaderOptions).not.toEqual(
+				new Map([
+					["test-svc-1.test-action-1", { option1: "option-value-1" }],
+					["v1.test-svc-2.test-action-3", { option2: "option-value-2" }],
+				])
+			);
+		});
 	});
 });
