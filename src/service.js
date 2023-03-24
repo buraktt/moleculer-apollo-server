@@ -25,6 +25,7 @@ module.exports = function (mixinOptions) {
 		createAction: true,
 		subscriptionEventName: "graphql.publish",
 		autoUpdateSchema: true,
+		checkActionVisibility: false,
 	});
 
 	const serviceSchema = {
@@ -235,10 +236,17 @@ module.exports = function (mixinOptions) {
 							});
 						} else {
 							const params = {};
+							let hasRootKeyValue = false;
 							if (root && rootKeys) {
 								rootKeys.forEach(key => {
-									_.set(params, rootParams[key], _.get(root, key));
+									const v = _.get(root, key);
+									_.set(params, rootParams[key], v);
+									if (v != null) hasRootKeyValue = true;
 								});
+
+								if (def.skipNullKeys && !hasRootKeyValue) {
+									return null;
+								}
 							}
 
 							let mergedParams = _.defaultsDeep({}, args, params, staticParams);
@@ -443,6 +451,13 @@ module.exports = function (mixinOptions) {
 
 						Object.values(service.actions).forEach(action => {
 							const { graphql: def } = action;
+							if (
+								mixinOptions.checkActionVisibility &&
+								action.visibility != null &&
+								action.visibility != "published"
+							)
+								return;
+
 							if (def && _.isObject(def)) {
 								if (def.query) {
 									if (!resolver["Query"]) resolver.Query = {};
